@@ -3,7 +3,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-
+/** 
+ *  TO TEST YOUR SQL COMMANDS A QUICK WAY IS TO COMMENT OUT THE WHILE LOOP 
+ *  AND CALL YOUR FUNCTION DIRECTLY WITH HARDCODED ARGUMENTS
+ *	I MADE A TEXT MENU MAINLY BECAUSE I WAS BORED AND I WANTED SOMETHING UNTL THE GUI
+ */
 public class FontEnd {
 	private static Statement stmt;
 	
@@ -27,6 +31,7 @@ public class FontEnd {
 													  "cs421g16",
 													  "-H0T3L421");
 		Scanner in = new Scanner(System.in);
+		stmt = conn.createStatement ( ) ;
 		int s;
 		while(on == true){
 			System.out.println("Welcome to the Hotel App");
@@ -35,9 +40,13 @@ public class FontEnd {
 			System.out.println("7. Exit");
 			s = in.nextInt();
 			if (s == 1){
+				int salary;
+				int eid;
 				System.out.println("Enter employee id");
-				s = in.nextInt();
-				changeSalary(s);
+				eid = in.nextInt();
+				System.out.println("Enter new salary");
+				salary = in.nextInt();
+				changeSalary(eid, salary);
 			}
 			if (s == 7){
 				on = false;
@@ -102,9 +111,7 @@ public class FontEnd {
 		
 		return emails;
 	}
-	public static void changeSalary(int i) throws SQLException{
-		ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Hotel");
-		int hID = rs.getInt(1);
-		System.out.println(hID);
+	public static void changeSalary(int eid, int salary) throws SQLException{
+		int rs = stmt.executeUpdate("UPDATE Employee SET salary = " + salary + " WHERE eid = " + eid);
 	}
 }
