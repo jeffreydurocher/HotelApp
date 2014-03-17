@@ -42,8 +42,9 @@ public class FontEnd {
 			System.out.println("4. Add Reservation");
 			System.out.println("----------------");
 			System.out.println("6. View Year Total Payments");
-			System.out.println("7. Change employee salary");
-			System.out.println("8. Exit");
+			System.out.println("7. Change Employee Salary");
+			System.out.println("8. Get Emails Of Unpaid Reservations");
+			System.out.println("9. Exit");
 			s = in.nextInt();
 			if (s == 2){
 				int salary;
@@ -52,16 +53,23 @@ public class FontEnd {
 				addEmployee(salary);
 			}
 			if (s == 4){
-				int amount;
+				int amount = 200;
 				System.out.println("Enter total amount");
 				amount = in.nextInt();
-				String departureDate;
-				String arrivalDate;
-				System.out.println("Enter Arrival Date ex: 20-03-2014");
+				String departureDate = "2014-03-23";
+				String arrivalDate = "2014-03-20";
+				in.nextLine();
+				System.out.println("Enter Arrival Date ex: 2014-03-20");
 				arrivalDate = in.nextLine();
-				System.out.println("Enter Departure Date ex: 25-03-2014");
+				System.out.println("Enter Departure Date ex: 2014-03-25");
 				departureDate = in.nextLine();
 				addReservation(amount, arrivalDate, departureDate);
+			}
+			if (s == 6){
+				int year;
+				System.out.println("Enter year");
+				year = in.nextInt();
+				getTotalPaymentsYear(year);
 			}
 			if (s == 7){
 				int salary;
@@ -73,6 +81,9 @@ public class FontEnd {
 				changeSalary(eid, salary);
 			}
 			if (s == 8){
+				
+			}
+			if (s == 9){
 				on = false;
 			}
 		}
@@ -147,14 +158,25 @@ public class FontEnd {
 			System.out.println("Code: " + sqlCode + "  sqlState: " + sqlState);
 		}
 	}
-	public static void getTotalPaymentsYear(String year) throws SQLException{
+	public static void getTotalPaymentsYear(int year) throws SQLException{
 		try{
-			String endDate = "31/12/"+year+1;
-			String startDate= "01/01/"+year;
-			int rs = stmt.executeUpdate("SELECT SUM(amount) FROM Payment "
+			String endDate = year+1+"-01-01";
+			String startDate= year-1+"-12-31";
+			ResultSet rs = stmt.executeQuery("SELECT SUM(amount) AS TOTAL FROM Payment "
 									  + "JOIN ReservationPayment ON Payment.pid = ReservationPayment.pid "
 									  + "JOIN Reservation ON ReservationPayment.rid = Reservation.rid "
-									  + "WHERE Reservation.arrivalDate <" + endDate + " AND Reservation.arrivalDate >" + startDate);
+									  + "WHERE Reservation.arrivalDate <'" + endDate + "' AND Reservation.arrivalDate >'" + startDate + "'");
+			ResultSetMetaData rsmd = rs.getMetaData();
+		    int columnsNumber = rsmd.getColumnCount();
+		    while (rs.next()) {
+		        for (int i = 1; i <= columnsNumber; i++) {
+		            if (i > 1) System.out.print(",  ");
+		            String columnValue = rs.getString(i);
+		            System.out.print(rsmd.getColumnName(i) + " " + columnValue);
+		        }
+		        System.out.println("");
+		    }
+			
 		}catch (SQLException e){
 			int sqlCode = e.getErrorCode(); // Get SQLCODE
 			String sqlState = e.getSQLState(); // Get SQLSTATE
@@ -189,11 +211,16 @@ public class FontEnd {
 	}	
 	public static void addReservation(int amount, String arrivalDate, String departureDate) throws SQLException{
 		// get rID val
+		int rID = 0, pID = 0;
 		ResultSet count = stmt.executeQuery("SELECT COUNT(*) FROM Reservation");
-		int rID = count.getInt(1);
+		while ( count.next ( ) ) {
+			rID = count.getInt(1)+1;
+		}
 		
 		count = stmt.executeQuery("SELECT COUNT(*) FROM Payment");
-		int pID = count.getInt(1);
+		while ( count.next ( ) ) {
+			pID = count.getInt(1)+1;
+		}
 		
 		int state = 0;
 		String roomType = "Single";
@@ -203,9 +230,9 @@ public class FontEnd {
 		String ccName = "Customer";
 		
 		try{
-			stmt.executeUpdate("INSERT INTO Reservation VALUES (" + rID + ", " + roomType + ", " + arrivalDate + ", " + departureDate + ", " + state);
-			stmt.executeUpdate("INSERT INTO Payment VALUES (" + pID + ", " + amount + ", " + ccNumber + ", " + ccType + ", " + ccName);
-			stmt.executeUpdate("INSERT INTO ReservationPayment VALUES (" + rID + ", " + pID);
+			stmt.executeUpdate("INSERT INTO Reservation VALUES (" + rID + ", '" + roomType + "', '" + arrivalDate + "', '" + departureDate + "', " + state + ")");
+			stmt.executeUpdate("INSERT INTO Payment VALUES (" + pID + ", " + amount + ", " + ccNumber + ", '" + ccType + "', '" + ccName + "')");
+			stmt.executeUpdate("INSERT INTO ReservationPayment VALUES (" + rID + ", " + pID + ")");
 		}catch (SQLException e){
 			int sqlCode = e.getErrorCode(); // Get SQLCODE
 			String sqlState = e.getSQLState(); // Get SQLSTATE
