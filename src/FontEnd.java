@@ -36,10 +36,34 @@ public class FontEnd {
 		while(on == true){
 			System.out.println("Welcome to the Hotel App");
 			System.out.println("Please enter the number of the command you would like to execute");
-			System.out.println("1. Change Salary");
-			System.out.println("7. Exit");
+			System.out.println("1. Add Hotel");
+			System.out.println("2. Add Employee");
+			System.out.println("3. Add Customer");
+			System.out.println("4. Add Reservation");
+			System.out.println("----------------");
+			System.out.println("6. View Year Total Payments");
+			System.out.println("7. Change employee salary");
+			System.out.println("8. Exit");
 			s = in.nextInt();
-			if (s == 1){
+			if (s == 2){
+				int salary;
+				System.out.println("Enter new salary");
+				salary = in.nextInt();
+				addEmployee(salary);
+			}
+			if (s == 4){
+				int amount;
+				System.out.println("Enter total amount");
+				amount = in.nextInt();
+				String departureDate;
+				String arrivalDate;
+				System.out.println("Enter Arrival Date ex: 20-03-2014");
+				arrivalDate = in.nextLine();
+				System.out.println("Enter Departure Date ex: 25-03-2014");
+				departureDate = in.nextLine();
+				addReservation(amount, arrivalDate, departureDate);
+			}
+			if (s == 7){
 				int salary;
 				int eid;
 				System.out.println("Enter employee id");
@@ -48,7 +72,7 @@ public class FontEnd {
 				salary = in.nextInt();
 				changeSalary(eid, salary);
 			}
-			if (s == 7){
+			if (s == 8){
 				on = false;
 			}
 		}
@@ -112,6 +136,84 @@ public class FontEnd {
 		return emails;
 	}
 	public static void changeSalary(int eid, int salary) throws SQLException{
-		int rs = stmt.executeUpdate("UPDATE Employee SET salary = " + salary + " WHERE eid = " + eid);
+		try{
+			int rs = stmt.executeUpdate("UPDATE Employee SET salary = " + salary + " WHERE eid = " + eid);
+		}catch (SQLException e){
+			int sqlCode = e.getErrorCode(); // Get SQLCODE
+			String sqlState = e.getSQLState(); // Get SQLSTATE
+        
+			// Your code to handle errors comes here;
+			// something more meaningful than a print would be good
+			System.out.println("Code: " + sqlCode + "  sqlState: " + sqlState);
+		}
 	}
+	public static void getTotalPaymentsYear(String year) throws SQLException{
+		try{
+			String endDate = "31/12/"+year+1;
+			String startDate= "01/01/"+year;
+			int rs = stmt.executeUpdate("SELECT SUM(amount) FROM Payment "
+									  + "JOIN ReservationPayment ON Payment.pid = ReservationPayment.pid "
+									  + "JOIN Reservation ON ReservationPayment.rid = Reservation.rid "
+									  + "WHERE Reservation.arrivalDate <" + endDate + " AND Reservation.arrivalDate >" + startDate);
+		}catch (SQLException e){
+			int sqlCode = e.getErrorCode(); // Get SQLCODE
+			String sqlState = e.getSQLState(); // Get SQLSTATE
+        
+			// Your code to handle errors comes here;
+			// something more meaningful than a print would be good
+			System.out.println("Code: " + sqlCode + "  sqlState: " + sqlState);
+		}
+	}
+	
+	//** ADDERS **//
+	public static void addEmployee(int salary) throws SQLException{
+		// get eID val
+		int eID = 0;
+		ResultSet count = stmt.executeQuery("SELECT COUNT(*) FROM Employee");
+		while ( count.next ( ) ) {
+			eID = count.getInt(1)+1;
+		}
+		System.out.println(eID);
+		try{
+			stmt.executeUpdate("INSERT INTO Employee VALUES (" + eID + ", " + salary + ", 1)");
+		}catch (SQLException e){
+			System.out.println(e.getMessage());
+			int sqlCode = e.getErrorCode(); // Get SQLCODE
+			String sqlState = e.getSQLState(); // Get SQLSTATE
+        
+			// Your code to handle errors comes here;
+			// something more meaningful than a print would be good
+			System.out.println("Code: " + sqlCode + "  sqlState: " + sqlState);
+		}
+		
+	}	
+	public static void addReservation(int amount, String arrivalDate, String departureDate) throws SQLException{
+		// get rID val
+		ResultSet count = stmt.executeQuery("SELECT COUNT(*) FROM Reservation");
+		int rID = count.getInt(1);
+		
+		count = stmt.executeQuery("SELECT COUNT(*) FROM Payment");
+		int pID = count.getInt(1);
+		
+		int state = 0;
+		String roomType = "Single";
+		
+		int ccNumber = 12345678;
+		String ccType = "Visa";
+		String ccName = "Customer";
+		
+		try{
+			stmt.executeUpdate("INSERT INTO Reservation VALUES (" + rID + ", " + roomType + ", " + arrivalDate + ", " + departureDate + ", " + state);
+			stmt.executeUpdate("INSERT INTO Payment VALUES (" + pID + ", " + amount + ", " + ccNumber + ", " + ccType + ", " + ccName);
+			stmt.executeUpdate("INSERT INTO ReservationPayment VALUES (" + rID + ", " + pID);
+		}catch (SQLException e){
+			int sqlCode = e.getErrorCode(); // Get SQLCODE
+			String sqlState = e.getSQLState(); // Get SQLSTATE
+        
+			// Your code to handle errors comes here;
+			// something more meaningful than a print would be good
+			System.out.println("Code: " + sqlCode + "  sqlState: " + sqlState);
+		}
+	}
+	
 }
