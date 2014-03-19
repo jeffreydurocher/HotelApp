@@ -1,4 +1,7 @@
 import java.sql.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -17,7 +20,7 @@ public class FontEnd {
 		public InputException(String message) { super(message); }
 	}
 	
-	public static void main(String args[]) throws SQLException
+	public static void main(String args[]) throws SQLException, ParseException
 	{
 		boolean on = true;
 		try {
@@ -209,7 +212,7 @@ public class FontEnd {
 		}
 		
 	}	
-	public static void addReservation(int amount, String arrivalDate, String departureDate) throws SQLException{
+	public static void addReservation(int amount, String arrivalDate, String departureDate) throws SQLException, ParseException{
 		// get rID val
 		int rID = 0, pID = 0;
 		ResultSet count = stmt.executeQuery("SELECT COUNT(*) FROM Reservation");
@@ -220,6 +223,17 @@ public class FontEnd {
 		count = stmt.executeQuery("SELECT COUNT(*) FROM Payment");
 		while ( count.next ( ) ) {
 			pID = count.getInt(1)+1;
+		}
+		
+		try {
+		    DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		    formatter.setLenient(false);
+		    java.util.Date date = formatter.parse(arrivalDate);
+		    date = formatter.parse(departureDate);
+		    System.out.println(date.toString());
+		} catch (ParseException e) { 
+			System.out.println("Bad date format, please try again");
+			return;
 		}
 		
 		int state = 0;
